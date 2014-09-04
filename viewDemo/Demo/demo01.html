@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <title>DEMO</title>
+    <meta charset="utf-8"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <style>
+        body { margin: 0; padding: 0; }
+    </style>
+    <script src="http://projectbs.github.io/bsJS/bsjs.0.5.js"></script>
+</head>
+<body>
+
+<script>
+    bs.debug(0)
+    bs(function(){
+        bs.require(function(){
+            bs.GL.init('#glCanvas', '../shaders.js', init)
+            function init(){
+                bs.GL.backgroundColor('#f08080')
+
+                bs.GL.parserOBJ('assets/charizard.obj', 'maskobj', function(){
+                    bs.GL.Mesh('maskobj').S('<', bs.GL, 'material', '#b0c4de, L', 'scaleX', 10, 'scaleY', 10, 'scaleZ', 10, 'y', -20)
+                })
+            }
+        }, '../gl.js')
+    })
+</script>
+</body>
+</html>

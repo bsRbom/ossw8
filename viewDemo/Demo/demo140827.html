@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <title>DEMO 02 140827</title>
+    <meta charset="utf-8"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <style>
+        body { margin: 0; padding: 0; }
+    </style>
+    <script src="http://projectbs.github.io/bsJS/bsjs.0.5.js"></script>
+</head>
+<body>
+
+<script>
+    bs.debug(0)
+    bs(function(){
+        bs.require(function(){
+            bs.GL.init('#glCanvas', 'http://projectbs.github.io/bsWebGL/shaders.js', init)
+            function init(){
+                bs.GL.backgroundColor('#00ced1')
+                var vs = [5.929688, 4.125, 0, 5.387188, 4.125]
+                var is = [0, 1, 2, 2, 3, 0]
+                var cs = [2, 2, 1.75, 2, 1.75]
+
+                bs.GL.parserOBJ('assets/lizard.obj', 'lizard', function(){
+                    // bs.GL.Mesh('lizard').S('<', bs.GL, 'material', '#fffff0, L', 'scaleX', 5, 'scaleY', 5, 'scaleZ', 5, 'x', 0, 'y', 0, 'rotationX', -90)
+                    // bs.GL.Mesh('lizard').S('<', bs.GL, 'material', '#90ee90, L', 'scaleX', 5, 'scaleY', 5, 'scaleZ', 5, 'x', 75, 'y', 75, 'rotationX', -90)
+                    // bs.GL.Mesh('lizard').S('<', bs.GL, 'material', '#191970, L', 'scaleX', 5, 'scaleY', 5, 'scaleZ', 5, 'x', 150, 'y', 0, 'rotationX', -90)
+                    // bs.GL.Mesh('lizard').S('<', bs.GL, 'material', '#db7093, L', 'scaleX', 5, 'scaleY', 5, 'scaleZ', 5, 'x', 75, 'y', -75, 'rotationX', -90)
+                    // bs.GL.Mesh('lizard').S('<', bs.GL, 'material', '#d8bfd8, L', 'scaleX', 5, 'scaleY', 5, 'scaleZ', 5, 'x', 0, 'y', -150, 'rotationX', -90)
+                    // bs.GL.Mesh('lizard').S('<', bs.GL, 'material', '#2e8b57, L', 'scaleX', 5, 'scaleY', 5, 'scaleZ', 5, 'x', -75, 'y', -75, 'rotationX', -90)
+                    // bs.GL.Mesh('lizard').S('<', bs.GL, 'material', '#f08080, L', 'scaleX', 5, 'scaleY', 5, 'scaleZ', 5, 'x', -150, 'y', 0, 'rotationX', -90)
+                    // bs.GL.Mesh('lizard').S('<', bs.GL, 'material', '#daa520, L', 'scaleX', 5, 'scaleY', 5, 'scaleZ', 5, 'x', -75, 'y', 75, 'rotationX', -90)
+                })
+                
+                var particle = bs.GL.Material('bitmap').S('src', 'assets/particle.png', 'this')
+                var particle2 = bs.GL.Material('bitmap').S('src', 'assets/particle2.png', 'this')
+                i = 300
+                while (i--) {
+                    bs.GL.Particle('particle_fire1_' + i % 10).S('<', bs.GL, 'pointSize', 1, 'zSort', 1, 'alpha', 1, 'material', i % 3 ? particle : particle2, 'x', Math.random() * 2000 - 1000, 'y', Math.random() * 2000 - 1000, 'z', Math.random() * 2000 - 1000, 'changeProperty', {
+                        max: 100,
+                        sPos: [-3, 3, 0, 0, 0, 0],
+                        dPos: [-100, 100, 100, 500, -100, 100],
+                        sScale: [25, 35],
+                        dScale: [0, 25],
+                        sAlpha: [0, 0],
+                        dAlpha: [0, 1],
+                        speedPos: 0.01,
+                        speedScale: 0.03,
+                        speedAlpha: 0.08,
+                        // 계산추가하기
+                        addMath: {
+                            //   속성 : [ 함수, 변화강도, 속도]
+                            x: ['sin', bs.randf(-8, 8), 0.3],
+                            y: ['cos', bs.randf(-8, 8), 0.3],
+                            z: ['sin', bs.randf(-8, 8), 0.3]
+                        },
+                        gravity: {x: -0.3, y: 0.1, z: 0}
+                    });
+                }
+            }
+        }, 'http://projectbs.github.io/bsWebGL/gl.js')
+    })
+</script>
+</body>
+</html>

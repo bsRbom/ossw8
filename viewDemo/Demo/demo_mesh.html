@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <title>DEMO mesh</title>
+    <meta charset="utf-8"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <style>
+        body { margin: 0; padding: 0; }
+    </style>
+    <script src="http://projectbs.github.io/bsJS/bsjs.0.6.js"></script>
+    <script type="text/javascript" src="http://openapi.map.naver.com/openapi/naverMap.naver?ver=1.0&key=12b3c026ed86209a4a97b865da62f695"></script>
+</head>
+<body>
+
+<script>
+    bs.debug(0)
+
+    var width= window.screen.availWidth, height= window.screen.availHeight;
+    var orgPoint= new nhn.api.map.LatLng(37.5617773, 126.9466193);
+    nhn.api.map.setDefaultPoint(orgPoint);
+    bs.Dom('<div id="map"></div>').S('<', 'body', 'width', width, 'height', height)
+
+    orgMap= new nhn.api.map.Map('map', {
+        point:orgPoint,
+        zoom: 10,
+        activeBicycleMap: false,
+        activeTrafficMap: false,
+        minMaxLevel: [1, 15],
+        size: new nhn.api.map.Size(width, height)
+    });
+    bs(function(){
+        bs.require(function(){
+            bs.GL.init('#glCanvas', 'http://projectbs.github.io/bsWebGL/shaders.js', init)
+            function init(){
+                // bs.GL.backgroundColor('#00ced1')
+
+                var meshed_color= ['#f0f8ff', '#faebd7', '#00ffff', '#7fffd4', '#f0ffff', '#f5f5dc', '#ffe4c4', '#000000', '#ffebcd', '#0000ff', '#8a2be2', '#a52a2a', '#deb887', '#5f9ea0', '#7fff00', '#d2691e', '#ff7f50', '#6495ed', '#fff8dc', '#dc143c', '#d2b48c', '#00ffff', '#00008b', '#008b8b', '#b8860b', '#a9a9a9', '#006400', '#a9a9a9', '#bdb76b', '#8b008b', '#556b2f', '#ff8c00', '#9932cc', '#8b0000', '#e9967a', '#8fbc8f', '#483d8b', '#2f4f4f', '#00ced1', '#9400d3', '#ff1493', '#00bfff', '#696969', '#1e90ff', '#b22222', '#fffaf0', '#228b22', '#ff00ff', '#dcdcdc', '#f8f8ff', '#ffd700', '#daa520', '#808080', '#008000', '#adff2f', '#808080', '#f0fff0', '#ff69b4', '#cd5c5c', '#4b0082', '#fffff0', '#f0e68c', '#e6e6fa', '#fff0f5', '#7cfc00', '#fffacd', '#add8e6', '#f08080', '#e0ffff', '#fafad2', '#d3d3d3', '#90ee90', '#d3d3d3', '#ffb6c1', '#ffa07a', '#20b2aa', '#87cefa', '#778899', '#b0c4de', '#ffffe0', '#00ff00', '#32cd32', '#faf0e6', '#ff00ff', '#800000', '#66cdaa', '#0000cd', '#ba55d3', '#9370db', '#3cb371', '#7b68ee', '#00fa9a', '#48d1cc', '#c71585', '#191970', '#f5fffa', '#ffe4e1', '#ffe4b5', '#ffdead', '#000080', '#fdf5e6', '#808000', '#6b8e23', '#ffa500', '#ff4500', '#da70d6', '#eee8aa', '#98fb98', '#afeeee', '#db7093', '#ffefd5', '#ffdab9', '#cd853f', '#4169e1', '#fa8072', '#6a5acd' ]
+                
+                i= 7000
+                while(i--){
+                    var number= Math.floor(Math.random()*116)
+                    console.log(number)
+                    var color_string= meshed_color[number]+', L'
+                    console.log(color_string)
+                    bs.GL.Mesh('sphere').S('material', color_string, 'scaleX', 10, 'scaleY', 10, 'scaleZ', 10, 'x', Math.random()*2000-1000, 'y', Math.random()*2000-1000, 'z', 0, '<', bs.GL)
+                }
+            }
+        }, 'http://projectbs.github.io/bsWebGL/gl.js')
+    })
+</script>
+</body>
+</html>
