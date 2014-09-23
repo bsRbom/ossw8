@@ -9,57 +9,41 @@
     </style>
     <script src="http://projectbs.github.io/bsJS/bsjs.0.6.js"></script>
     <script type="text/javascript" src="http://openapi.map.naver.com/openapi/naverMap.naver?ver=2.0&key=cc96697b16731837a81e5b401b52537f"></script>
+    <link rel="stylesheet" type="text/css" href="style.css">
 </head>
 <body>
-<div id="map" style="border:1px solid #000;"></div>
+<div id="map"></div>
+<canvas id="glCanvas"></canvas>
 
 <script>
     bs.debug(0)
-
-    // window.setInterval(function(){
-    //     console.log('screen update');
-    //     location.reload();
-    //     start();
-    //     // makeBackground();
-    // }, 5000);   
-    // start();
-
-    // setTimeout(function(){
-    //     window.location.reload(1);
-    // }, 3000);
+    var width= window.screen.availWidth
+    var height= window.screen.availHeight
 
     start();
     setMap();
 
     function setMap(){
-        var width= window.screen.availWidth
-        var height= window.screen.availHeight
         var oSeoulCityPoint = new nhn.api.map.LatLng(37.5675451, 126.9773356);
         var defaultLevel = 11;
         var oMap = new nhn.api.map.Map(document.getElementById('map'), { 
                 point : oSeoulCityPoint,
                 zoom : defaultLevel,
-                enableWheelZoom : false,
+                enableWheelZoom : true,
                 enableDragPan : true,
-                enableDblClickZoom : true,
+                enableDblClickZoom : false,
                 mapMode : 0,
                 activateTrafficMap : false,
                 activateBicycleMap : false,
                 minMaxLevel : [ 1, 14 ],
                 size : new nhn.api.map.Size(width, height)
             });
-        // var oSlider = new nhn.api.map.ZoomControl();
-        // oMap.addControl(oSlider);
-        // oSlider.setPosition({
-        //         top : 10,
-        //         left : 10
-        // });
-        // var oMapTypeBtn = new nhn.api.map.MapTypeBtn();
-        // oMap.addControl(oMapTypeBtn);
-        // oMapTypeBtn.setPosition({
-        //         bottom : 10,
-        //         right : 80
-        // });
+        var oSlider = new nhn.api.map.ZoomControl();
+        oMap.addControl(oSlider);
+        oSlider.setPosition({
+                top : 10,
+                left : 10
+        });
 
         var oSize = new nhn.api.map.Size(28, 37);
         var oOffset = new nhn.api.map.Size(14, 37);
@@ -158,10 +142,11 @@
 
                     var ball= bs.GL.Mesh('sphere')
 
-                    ball.S('material', color_string, 'scaleX', 10, 'scaleY', 10, 'scaleZ', 10, 'x', Math.random()*2000-1000, 'y', Math.random()*2000-1000, 'z', 10, '<', bs.GL)
+                    ball.S('material', color_string, 'scaleX', 10, 'scaleY', 10, 'scaleZ', 10, 'x', Math.random()*width-width/2, 'y', Math.random()*height-height/2, '<', bs.GL)
 
                     // bs.ANI.gl(ball, 'x', i%100, 'y', i%100, 'z', 0, 'scaleX', i%10+10, 'scaleY', i%10+10, 'scaleZ', i%10+10, 'loop', 0)
                 }
+                bs.GL.controller = bs.GL.Controller( 'NONE' )
             }
         // }, 'http://projectbs.github.io/bsWebGL/gl.js')
         }, '../gl.js')
