@@ -250,7 +250,7 @@
 		GL={
 			init:(function(){
 				function _init( id, endCallBack, failCallback ){
-					var i,keys='webgl,experimental-webgl,webkit-3d,moz-webgl'.split( ',' ), keys2={/*premultipliedAlpha:0,stencil:1,*/preserveDrawingBuffer:1};
+					var i,keys='webgl,experimental-webgl,webkit-3d,moz-webgl'.split( ',' ), keys2={/*premultipliedAlpha:0,stencil:1,*/antialias:1,preserveDrawingBuffer:1};
 					if( cvs ) return console.log( '중복초기화 방지' );
 					cvs=document.getElementById( id.substr( 1, id.length-1 ) ),i=keys.length
 					while( i-- ) if( gl=cvs.getContext( keys[i], keys2 ) ) break
@@ -260,6 +260,10 @@
 							gl.viewport( 0, 0, w, h ), UTIL.mkFrameBuffer( 'pre', w, h, 1.0, 1.0 ), UTIL.mkFrameBuffer( 'mouse', w/15, h/15, 1/15, 1/15 )
 						}),
 						(function tick(){debuger.render(), render(), requestAnimationFrame( tick )})(),(function tick(){if( GL.controller ) GL.controller.update( perspectMTX );requestAnimationFrame( tick )})(),
+//						(function tick(){debuger.render(), render(), requestAnimationFrame( tick )})(),
+//					setInterval(function(){
+//						if( GL.controller ) GL.controller.update( perspectMTX );
+//					},16),
 						endCallBack()
 						// GL.backgroundColor('#000'),endCallBack()
 					else console.log( 'WEBGL을 지원하지 않는 브라우져입니다' ), failCallback ? failCallback() : 0
@@ -333,6 +337,7 @@
 					this._updateTexture=function( t ){
 						gl.pixelStorei( gl.UNPACK_FLIP_Y_WEBGL, true ), gl.bindTexture( gl.TEXTURE_2D, t ), gl.texImage2D( gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, t.canvas ),
 							gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR ), gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR ),
+
 							gl.bindTexture( gl.TEXTURE_2D, null ), t.loaded=1
 						// TODO 밉맵생성에 대해서 고민...좀..
 					}
@@ -395,36 +400,65 @@
 				return function( _k ){ return new Particle( _k )}
 			})(),
 			Controller:(function(){
-				var camera=function(){},ISO,NONE;
+				var camera=function(){},ISO,NONE,PVR;
 				var mC=Math.cos, mS=Math.sin, PI=Math.PI;
 				camera.prototype={
 					data:{x:0, y:0, z:0, rotationX:0, rotationY:0, rotationZ:0},d3:new Float32Array( 3 ),
-					fov:55, near:1, far:15000, cameraMTX:mat4.create(),mouseDowned:0, enable:1,
+					fov:55, near:10, far:15000, cameraMTX:mat4.create(),mouseDowned:0, enable:1,
 					S:sMethod.prototype.S,perspectiveUpdate:function( mtx ){ mat4.perspective(this.fov, GL._w/GL._h, this.near, this.far, mtx);if(!this.enable) return},_updateDrag:function(){},
 				},
 				ISO=function(){
 					var t=new camera(), t0, t1, dx, dy, rTilt=PI/2, rPan=PI/2, mx=GL.mobile ? 'mx0' : 'mx', my=GL.mobile ? 'my0' : 'my';
-					t.distance=500, t.speed=1, t.speedDelay=0.05, t.tilt=PI/2, t.pan=PI/2,
+					t.distance=1000, t.speed=1, t.speedDelay=0.05, t.tilt=PI/2, t.pan=PI/2,
+						t.cx = 0, t.cy=0, t.cz=0
 					t._updateDrag=function( $e ){ this.mouseDowned*this.enable ? (dx=$e[mx], dy= -$e[my], this.tilt+=(dx)/GL._w*PI*this.speed, this.pan+=(dy)/GL._h/2*PI*this.speed ) : 0},
 					t.update=function( mtx ){
 						this.perspectiveUpdate( mtx ), t0=this.cameraMTX=mat4.identity( t.cameraMTX ), t1=this.distance
 						rPan+=(this.pan-rPan)*this.speedDelay*2, rTilt+=(this.tilt-rTilt)*this.speedDelay // 짐벌락 보정해야됨 - 왜 라디안값이 이따우지-_-
-						this.d3[0]=this.data.x=t1*mS( rPan )*mC( rTilt ), this.d3[1]=this.data.y=t1*mC( rPan ), this.d3[2]=this.data.z=t1*mS( rPan )*mS( rTilt ), mat4.translate( t0, t0, this.d3 ), mat4.lookAt( t0, this.d3, [0, 0, 0], [0, 1, 0] )
+						this.d3[0]=this.data.x=t1*mS( rPan )*mC( rTilt ), this.d3[1]=this.data.y=t1*mC( rPan ), this.d3[2]=this.data.z=t1*mS( rPan )*mS( rTilt ),
+
+						mat4.translate( t0, t0, this.d3 ), mat4.lookAt( t0, this.d3, [0, 0, 0], [0, 1, 0] )
+
 						this.data.rotationX= -Math.atan2( t0[6], t0[10] ), this.data.rotationY=Math.asin( t0[2] ), this.data.rotationZ= -Math.atan2( t0[1], t0[0] )
 					}
 					return t
 				},
+				PVR=function(){
+						var t=new camera(), t0, t1, dx, dy, rTilt=PI/2, rPan=PI/2, mx=GL.mobile ? 'mx0' : 'mx', my=GL.mobile ? 'my0' : 'my';
+						t.distance=1000, t.speed=1, t.speedDelay=0.05, t.tilt=PI/2, t.pan=PI/2,
+							t.cx = 0, t.cy=0, t.cz=0
+						t._updateDrag=function( $e ){ this.mouseDowned*this.enable ? (dx=$e[mx], dy= -$e[my], this.tilt+=(dx)/GL._w*PI*this.speed, this.pan+=(dy)/GL._h/2*PI*this.speed ) : 0},
+							t.update=function( mtx ){
+								this.perspectiveUpdate( mtx ), t0=this.cameraMTX=mat4.identity( t.cameraMTX ), t1=this.distance
+								rPan+=(this.pan-rPan)*this.speedDelay*2, rTilt+=(this.tilt-rTilt)*this.speedDelay // 짐벌락 보정해야됨 - 왜 라디안값이 이따우지-_-
+								this.d3[0]=this.data.x=t1*mS( rPan )*mC( rTilt ), this.d3[1]=this.data.y=t1*mC( rPan ), this.d3[2]=this.data.z=t1*mS( rPan )*mS( rTilt ),
+
+									mat4.translate( t0, t0, this.d3 ), mat4.lookAt( t0, this.d3, [0, 0, 0], [0, 1, 0] )
+								this.d3[0]+=this.cx,
+									this.d3[1]+=this.cy,
+									this.d3[2]+=this.cz,
+									mat4.translate( t0, t0, this.d3 ),
+									this.data.rotationX= -Math.atan2( t0[6], t0[10] ), this.data.rotationY=Math.asin( t0[2] ), this.data.rotationZ= -Math.atan2( t0[1], t0[0] )
+							}
+						return t
+					},
 				NONE=function(){
 					var t=new camera(), t0;
+					t.x = t.y= t.z = 0
+						// Inserted
+						// To Open Software
+						// t._updateDrag= function($e){ this.mouseDowned*this.enable ? console.log('drag') : 0}
+						// Inserted
 						t.update=function( mtx ){
-							this.perspectiveUpdate( mtx ), t0=this.cameraMTX=mat4.identity( this.cameraMTX ), this.d3[0]=this.data.x, this.d3[1]=this.data.y, this.d3[2]=this.data.z,
-							mat4.rotateX( t0, t0, this.data.rotationX ), mat4.rotateY( t0, t0, this.data.rotationY ), mat4.rotateZ( t0, t0, this.data.rotationZ ), mat4.translate( t0, t0, d3 )
+							this.perspectiveUpdate( mtx ), t0=this.cameraMTX=mat4.identity( this.cameraMTX ), this.d3[0]=this.x, this.d3[1]=this.y, this.d3[2]=this.z,
+							mat4.rotateX( t0, t0, this.data.rotationX ), mat4.rotateY( t0, t0, this.data.rotationY ), mat4.rotateZ( t0, t0, this.data.rotationZ ),mat4.translate( t0, t0, this.d3 ),
 							this.cameraMTX=t0
 						}
 					return t
 				}
 				return function( k ){ //var SIMPLE // 프리카메라//var WALK // 워킹 액션//var AUTOCAM // 3D파일에서 카메라 애니메이션을 추출 마치 비디오처럼!
 					if( k == 'ISO' ) return new ISO();
+					else if( k == 'PVR' ) return new PVR();
 					else if( k == 'NONE' ) return new NONE();
 					else console.log( '지원하지 않는 타입입니다.' )
 				}
@@ -454,7 +488,7 @@
 		GL['parserOBJ']=function(src,type,callback){
 			bs.get(function(data){
 				// TODO 파서는 나중에 좀더 파자.............잘몰것다 -_-// TODO 다중 재질 어케파싱할건가에 대한 고려필요// TODO 애니메이션 어케파싱할건가에 대한 고려...
-				console.log(data)
+//				console.log(data)
 				var v=[], n=[], c=[], _hi={}, _index=0, _v=[], _n=[], _c=[], _i=[], t0=data.split('\n'), i=0, j, len, len2,t1;
 				len=t0.length
 				while(len--){ t1=t0[i],i++

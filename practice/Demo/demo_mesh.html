@@ -4,155 +4,102 @@
     <title>DEMO mesh</title>
     <meta charset="utf-8"/>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-    <style>
-        body { margin: 0; padding: 0; }
-    </style>
     <script src="http://projectbs.github.io/bsJS/bsjs.0.6.js"></script>
     <script type="text/javascript" src="http://openapi.map.naver.com/openapi/naverMap.naver?ver=2.0&key=cc96697b16731837a81e5b401b52537f"></script>
+    <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?key=AIzaSyArrki62CdQGRJTI65ve390kWvvYUS011M&sensor=true"></script>
     <link rel="stylesheet" type="text/css" href="style.css">
 </head>
 <body>
-<div id="map"></div>
-<canvas id="glCanvas"></canvas>
-
+    <div id="map"></div>
+    <canvas id="glCanvas"></canvas>
 <script>
     bs.debug(0)
     var width= window.screen.availWidth
     var height= window.screen.availHeight
 
-    start();
-    setMap();
+    var meshed_color= ['#f0f8ff', '#faebd7', '#00ffff', '#7fffd4', '#f0ffff', '#f5f5dc', '#ffe4c4', '#000000', '#ffebcd', '#0000ff', '#8a2be2', '#a52a2a', '#deb887', '#5f9ea0', '#7fff00', '#d2691e', '#ff7f50', '#6495ed', '#fff8dc', '#dc143c', '#d2b48c', '#00ffff', '#00008b', '#008b8b', '#b8860b', '#a9a9a9', '#006400', '#a9a9a9', '#bdb76b', '#8b008b', '#556b2f', '#ff8c00', '#9932cc', '#8b0000', '#e9967a', '#8fbc8f', '#483d8b', '#2f4f4f', '#00ced1', '#9400d3', '#ff1493', '#00bfff', '#696969', '#1e90ff', '#b22222', '#fffaf0', '#228b22', '#ff00ff', '#dcdcdc', '#f8f8ff', '#ffd700', '#daa520', '#808080', '#008000', '#adff2f', '#808080', '#f0fff0', '#ff69b4', '#cd5c5c', '#4b0082', '#fffff0', '#f0e68c', '#e6e6fa', '#fff0f5', '#7cfc00', '#fffacd', '#add8e6', '#f08080', '#e0ffff', '#fafad2', '#d3d3d3', '#90ee90', '#d3d3d3', '#ffb6c1', '#ffa07a', '#20b2aa', '#87cefa', '#778899', '#b0c4de', '#ffffe0', '#00ff00', '#32cd32', '#faf0e6', '#ff00ff', '#800000', '#66cdaa', '#0000cd', '#ba55d3', '#9370db', '#3cb371', '#7b68ee', '#00fa9a', '#48d1cc', '#c71585', '#191970', '#f5fffa', '#ffe4e1', '#ffe4b5', '#ffdead', '#000080', '#fdf5e6', '#808000', '#6b8e23', '#ffa500', '#ff4500', '#da70d6', '#eee8aa', '#98fb98', '#afeeee', '#db7093', '#ffefd5', '#ffdab9', '#cd853f', '#4169e1', '#fa8072', '#6a5acd' ]
 
-    function setMap(){
-        var oSeoulCityPoint = new nhn.api.map.LatLng(37.5675451, 126.9773356);
-        var defaultLevel = 11;
-        var oMap = new nhn.api.map.Map(document.getElementById('map'), { 
-                point : oSeoulCityPoint,
-                zoom : defaultLevel,
-                enableWheelZoom : true,
-                enableDragPan : true,
-                enableDblClickZoom : false,
-                mapMode : 0,
-                activateTrafficMap : false,
-                activateBicycleMap : false,
-                minMaxLevel : [ 1, 14 ],
-                size : new nhn.api.map.Size(width, height)
-            });
-        var oSlider = new nhn.api.map.ZoomControl();
-        oMap.addControl(oSlider);
-        oSlider.setPosition({
-                top : 10,
-                left : 10
+    function initialize() {
+        var mapOptions = {
+            zoom: 8,
+            center: new google.maps.LatLng(37.5675451, 126.9773356),
+            disableDefaultUI: true
+        };
+        map = new google.maps.Map(document.getElementById('map'), mapOptions);
+
+        // Create new control to display latlng and coordinates under mouse.
+        var latLngControl = new LatLngControl(map);
+        
+        // Register event listeners
+        // google.maps.event.addListener(map, 'mouseover', function(mEvent) {
+        //     latLngControl.set('visible', true);
+        // });
+        // google.maps.event.addListener(map, 'mouseout', function(mEvent) {
+        //     latLngControl.set('visible', false);
+        // });
+        // google.maps.event.addListener(map, 'mousemove', function(mEvent) {
+        //     latLngControl.updatePosition(mEvent.latLng);
+        // });
+
+        google.maps.event.addListener(map, 'click', function(event){
+            latLngControl.updatePosition(event.latLng);
         });
-
-        var oSize = new nhn.api.map.Size(28, 37);
-        var oOffset = new nhn.api.map.Size(14, 37);
-        var oIcon = new nhn.api.map.Icon('http://static.naver.com/maps2/icons/pin_spot2.png', oSize, oOffset);
-
-        var oInfoWnd = new nhn.api.map.InfoWindow();
-        oInfoWnd.setVisible(false);
-        oMap.addOverlay(oInfoWnd);
-
-        oInfoWnd.setPosition({
-                top : 20,
-                left :20
-        });
-
-        var oLabel = new nhn.api.map.MarkerLabel(); // - 마커 라벨 선언.
-        oMap.addOverlay(oLabel); // - 마커 라벨 지도에 추가. 기본은 라벨이 보이지 않는 상태로 추가됨.
-        console.log("map bound:   "+oMap.getSize());
-
-        oInfoWnd.attach('changeVisible', function(oCustomEvent) {
-            if (oCustomEvent.visible) {
-                    oLabel.setVisible(false);
-            }
-        });
-                
-        var oPolyline = new nhn.api.map.Polyline([], {
-                strokeColor : '#f00', // - 선의 색깔
-                strokeWidth : 5, // - 선의 두께
-                strokeOpacity : 0.5 // - 선의 투명도
-        }); // - polyline 선언, 첫번째 인자는 선이 그려질 점의 위치. 현재는 없음.
-        oMap.addOverlay(oPolyline); // - 지도에 선을 추가함.
-
-        oMap.attach('mouseenter', function(oCustomEvent) {
-                var oTarget = oCustomEvent.target;
-                // 마커위에 마우스 올라간거면
-                if (oTarget instanceof nhn.api.map.Marker) {
-                        var oMarker = oTarget;
-                        oLabel.setVisible(true, oMarker); // - 특정 마커를 지정하여 해당 마커의 title을 보여준다.
-                }
-        });
-
-        oMap.attach('mouseleave', function(oCustomEvent) {
-
-                var oTarget = oCustomEvent.target;
-                // 마커위에서 마우스 나간거면
-                if (oTarget instanceof nhn.api.map.Marker) {
-                        oLabel.setVisible(false);
-                }
-        });
-
-        oMap.attach('click', function(oCustomEvent) {
-                var oPoint = oCustomEvent.point;
-                var oTarget = oCustomEvent.target;
-                oInfoWnd.setVisible(false);
-                // 마커 클릭하면
-                if (oTarget instanceof nhn.api.map.Marker) {
-                        // 겹침 마커 클릭한거면
-                        if (oCustomEvent.clickCoveredMarker) {
-                                return;
-                         }
-                        // - InfoWindow 에 들어갈 내용은 setContent 로 자유롭게 넣을 수 있습니다. 외부 css를 이용할 수 있으며, 
-                        // - 외부 css에 선언된 class를 이용하면 해당 class의 스타일을 바로 적용할 수 있습니다.
-                        // - 단, DIV 의 position style 은 absolute 가 되면 안되며, 
-                        // - absolute 의 경우 autoPosition 이 동작하지 않습니다. 
-                        oInfoWnd.setContent('<DIV style="border-top:1px solid; border-bottom:2px groove black; border-left:1px solid; border-right:2px groove black;margin-bottom:1px;color:black;background-color:white; width:auto; height:auto;">'+
-                                        '<span style="color: #000000 !important;display: inline-block;font-size: 12px !important;font-weight: bold !important;letter-spacing: -1px !important;white-space: nowrap !important; padding: 2px 5px 2px 2px !important">' + 
-                                        'Hello World <br /> ' + oTarget.getPoint()
-                                        +'<span></div>');
-                        oInfoWnd.setPoint(oTarget.getPoint());
-                        oInfoWnd.setPosition({right : 15, top : 30});
-                        oInfoWnd.setVisible(true);
-                        oInfoWnd.autoPosition();
-                        return;
-                }
-                var oMarker = new nhn.api.map.Marker(oIcon, { title : '마커 : ' + oPoint.toString() });
-                oMarker.setPoint(oPoint);
-                oMap.addOverlay(oMarker);
-
-                var aPoints = oPolyline.getPoints(); // - 현재 폴리라인을 이루는 점을 가져와서 배열에 저장.
-                aPoints.push(oPoint); // - 추가하고자 하는 점을 추가하여 배열로 저장함.
-                oPolyline.setPoints(aPoints); // - 해당 폴리라인에 배열에 저장된 점을 추가함
-        });
-    }  
-
-    function start(){
-        bs(function(){
-        bs.require(function(){
-            // bs.GL.init('#glCanvas', 'http://projectbs.github.io/bsWebGL/shaders.js', init)
-            bs.GL.init('#glCanvas', '../shaders.js', init)
-            function init(){
-                var meshed_color= ['#f0f8ff', '#faebd7', '#00ffff', '#7fffd4', '#f0ffff', '#f5f5dc', '#ffe4c4', '#000000', '#ffebcd', '#0000ff', '#8a2be2', '#a52a2a', '#deb887', '#5f9ea0', '#7fff00', '#d2691e', '#ff7f50', '#6495ed', '#fff8dc', '#dc143c', '#d2b48c', '#00ffff', '#00008b', '#008b8b', '#b8860b', '#a9a9a9', '#006400', '#a9a9a9', '#bdb76b', '#8b008b', '#556b2f', '#ff8c00', '#9932cc', '#8b0000', '#e9967a', '#8fbc8f', '#483d8b', '#2f4f4f', '#00ced1', '#9400d3', '#ff1493', '#00bfff', '#696969', '#1e90ff', '#b22222', '#fffaf0', '#228b22', '#ff00ff', '#dcdcdc', '#f8f8ff', '#ffd700', '#daa520', '#808080', '#008000', '#adff2f', '#808080', '#f0fff0', '#ff69b4', '#cd5c5c', '#4b0082', '#fffff0', '#f0e68c', '#e6e6fa', '#fff0f5', '#7cfc00', '#fffacd', '#add8e6', '#f08080', '#e0ffff', '#fafad2', '#d3d3d3', '#90ee90', '#d3d3d3', '#ffb6c1', '#ffa07a', '#20b2aa', '#87cefa', '#778899', '#b0c4de', '#ffffe0', '#00ff00', '#32cd32', '#faf0e6', '#ff00ff', '#800000', '#66cdaa', '#0000cd', '#ba55d3', '#9370db', '#3cb371', '#7b68ee', '#00fa9a', '#48d1cc', '#c71585', '#191970', '#f5fffa', '#ffe4e1', '#ffe4b5', '#ffdead', '#000080', '#fdf5e6', '#808000', '#6b8e23', '#ffa500', '#ff4500', '#da70d6', '#eee8aa', '#98fb98', '#afeeee', '#db7093', '#ffefd5', '#ffdab9', '#cd853f', '#4169e1', '#fa8072', '#6a5acd' ]
-                
-                i= 300
-                while(i--){
-                    var number= Math.floor(Math.random()*116)
-                    var color_string= meshed_color[number]+', L'
-
-                    var ball= bs.GL.Mesh('sphere')
-
-                    ball.S('material', color_string, 'scaleX', 10, 'scaleY', 10, 'scaleZ', 10, 'x', Math.random()*width-width/2, 'y', Math.random()*height-height/2, '<', bs.GL)
-
-                    // bs.ANI.gl(ball, 'x', i%100, 'y', i%100, 'z', 0, 'scaleX', i%10+10, 'scaleY', i%10+10, 'scaleZ', i%10+10, 'loop', 0)
-                }
-                bs.GL.controller = bs.GL.Controller( 'NONE' )
-            }
-        // }, 'http://projectbs.github.io/bsWebGL/gl.js')
-        }, '../gl.js')
-    })
     }
+    google.maps.event.addDomListener(window, 'load', initialize);
+
+    set_gl();
+
+    function set_gl(){
+        bs(function(){
+            bs.require(function(){
+                bs.GL.init('#glCanvas', '../shaders.js', function(){
+                    i=500
+                    while(i--){
+                        var number= Math.floor(Math.random()*116)
+                        var color_string= meshed_color[number]+', L'
+
+                        var bus= bs.GL.Mesh('sphere')
+                        var stop= bs.GL.Mesh('box')
+                        bus.S('material', color_string, 'scaleX', 5, 'scaleY', 5, 'scaleZ', 5, 'x', Math.random()*width-width/2, 'y', Math.random()*height-height/2, 'z', 1, '<', bs.GL)
+
+                        bs.ANI.gl(bus, 'x', i%100, 'y', i%100, 'z', 0, 'loop', 0)
+
+                        stop.S('material', color_string, 'scaleX', 5, 'scaleY', 5, 'scaleZ', 5, 'x', Math.random()*width-width/2, 'y', Math.random()*height-height/2, 'z', -1, '<', bs.GL, 'mouseup', function(){
+                                console.log('mouse up')
+                        })
+                    }
+
+                    bs.GL.controller = bs.GL.Controller('NONE')
+                    bs.GL.controller.z = -700
+                })
+            }, '../gl.js')
+        })
+    }
+
+    function LatLngControl(map) {
+        /**
+         * Offset the control container from the mouse by this amount.
+         */
+        this.ANCHOR_OFFSET_ = new google.maps.Point(8, 8);
+        
+        // Bind this OverlayView to the map so we can access MapCanvasProjection
+        // to convert LatLng to Point coordinates.
+        this.setMap(map);
+        
+        // Register an MVC property to indicate whether this custom control
+        // is visible or hidden. Initially hide control until mouse is over map.
+        this.set('visible', false);
+    }
+
+    LatLngControl.prototype = new google.maps.OverlayView();
+    LatLngControl.prototype.draw = function() {};
+
+    LatLngControl.prototype.updatePosition = function(latLng) {
+        var projection = this.getProjection();
+        var point = projection.fromLatLngToContainerPixel(latLng);
+        console.log(point.x+'  ::  '+point.y);
+    };
     
- </script>
+</script>
 </body>
 </html>
